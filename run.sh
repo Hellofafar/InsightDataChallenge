@@ -1,0 +1,1 @@
+python3 src/sessionization.py input/inactivity_period.txt input2 output
