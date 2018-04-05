@@ -3,11 +3,11 @@ import datetime
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
-        print("Please input the command correctly: sessionization.py input/1 input/2 output")
+        print("Please input the command correctly: python3 src/sessionization.py input/inactivity_period.txt input/log.csv output/sessionization.txt")
         exit(1)
     
     input_period_path = sys.argv[1]
-    input_log_path = sys.argv[1]
+    input_log_path = sys.argv[2]
     output_path = sys.argv[3]
 
     inactivity_period = 0
@@ -23,7 +23,7 @@ if __name__ == "__main__":
     request_dict = {}  # Dictionary of users/ips and their relevant information.
 
     try:
-        open(output_path, 'a') as session_writer
+        session_writer = open(output_path, 'a')
     except:
         print('Output path is invalid')
         exit(3)
@@ -33,10 +33,10 @@ if __name__ == "__main__":
         logs = log_reader.readlines()
 
         currentTime = '1970-01-01 00:00:00'
-        timestamp = datetime.datetime.strptime(currenttTime, '%Y-%m-%d %H:%M:%S')
+        timestamp = datetime.datetime.strptime(currentTime, '%Y-%m-%d %H:%M:%S')
         for log in logs:
             log = log.strip().split(',')
-            if len(log) = 0:
+            if len(log) == 0:
                 continue
             ip = log[0].strip()
             date = log[1].strip()
@@ -54,7 +54,7 @@ if __name__ == "__main__":
                 while user_updated_list:
                     user = user_updated_list[0]
                     # Check from the start of user_updated_list until the first user of list is still active
-                    if (timestamp - request_dict[user]['lastTime']).seconds > inactivity_period:
+                    if (timestamp - request_dict[user]['lastTime']).total_seconds() > inactivity_period:
                         # If a session is expired, delete all relevant record of this session.
                         values = request_dict.pop(user)
                         user_updated_list.remove(user)
@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
                         start = datetime.datetime.strftime(values['startTime'], '%Y-%m-%d %H:%M:%S')
                         end = datetime.datetime.strftime(values['lastTime'], '%Y-%m-%d %H:%M:%S')
-                        session_writer.write('%s,%s,%s,%d,%d\n' % (user, start, end, (values['lastTime'] - values['startTime']).seconds + 1, values['pageCount']))
+                        session_writer.write('%s,%s,%s,%d,%d\n' % (user, start, end, int((values['lastTime'] - values['startTime']).total_seconds()) + 1, values['pageCount']))
                     
                     else:
                         break  # All the users in user_updated_list are active so far
@@ -78,8 +78,15 @@ if __name__ == "__main__":
                 user_updated_list.remove(ip)  # Change user's order in user_updated_list by remove and append
                 user_updated_list.append(ip)
             
+        while len(user_list) > 0:
+            user = user_list.pop(0)
+            values = request_dict.pop(user)
 
-
+            start = datetime.datetime.strftime(values['startTime'], '%Y-%m-%d %H:%M:%S')
+            end = datetime.datetime.strftime(values['lastTime'], '%Y-%m-%d %H:%M:%S')
+            session_writer.write('%s,%s,%s,%d,%d\n' % (user, start, end, int((values['lastTime'] - values['startTime']).total_seconds()) + 1, values['pageCount']))
+        
+            user_updated_list.remove(user)
             
 
     print("hello world!")
