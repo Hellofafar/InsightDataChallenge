@@ -33,6 +33,7 @@ if __name__ == "__main__":
         logs = log_reader.readlines()
 
         currentTime = '1970-01-01 00:00:00'
+        timestamp = datetime.datetime.strptime(currenttTime, '%Y-%m-%d %H:%M:%S')
         for log in logs:
             log = log.strip().split(',')
             if len(log) = 0:
@@ -40,31 +41,43 @@ if __name__ == "__main__":
             ip = log[0].strip()
             date = log[1].strip()
             time = log[2].strip()
-            requestTime = date + ' ' + time
-            if requestTime != currentTime:
-                timestamp = datetime.datetime.strptime(requestTime, '%Y-%m-%d %H:%M:%S')
-                currentTime = requestTime
-
             cik = log[4].strip()
             accession = log[5].strip()
             extention = log[6].strip()
             webpage = cik + accession + extention
 
-            while user_updated_list:
-                user = user_updated_list[0]
-                # Check from the start of user_updated_list until the first user of list is still active
-                if (timestamp - request_dict[user][lastTime]).seconds > inactivity_period:
-                    # If a session is expired, delete all relevant record of this session.
-                    values = request_dict.pop(user)
-                    user_updated_list.remove(user)
-                    user_list.remove(user)
+            requestTime = date + ' ' + time
+            if requestTime != currentTime:  # If a new time shows up, check if any session is expired
+                timestamp = datetime.datetime.strptime(requestTime, '%Y-%m-%d %H:%M:%S')
+                currentTime = requestTime
 
-                    start = datetime.datetime.strftime(values[startTime], '%Y-%m-%d %H:%M:%S')
-                    end = datetime.datetime.strftime(values[lastTime], '%Y-%m-%d %H:%M:%S')
-                    session_writer.write('%s,%s,%s,%d,%d\n' % (user, start, end, (values[lastTime] - values[startTime]).seconds + 1, values[pageCount]))
-                
-                else:
-                    break  # All the users in user_updated_list are active so far
+                while user_updated_list:
+                    user = user_updated_list[0]
+                    # Check from the start of user_updated_list until the first user of list is still active
+                    if (timestamp - request_dict[user]['lastTime']).seconds > inactivity_period:
+                        # If a session is expired, delete all relevant record of this session.
+                        values = request_dict.pop(user)
+                        user_updated_list.remove(user)
+                        user_list.remove(user)
+
+                        start = datetime.datetime.strftime(values['startTime'], '%Y-%m-%d %H:%M:%S')
+                        end = datetime.datetime.strftime(values['lastTime'], '%Y-%m-%d %H:%M:%S')
+                        session_writer.write('%s,%s,%s,%d,%d\n' % (user, start, end, (values['lastTime'] - values['startTime']).seconds + 1, values['pageCount']))
+                    
+                    else:
+                        break  # All the users in user_updated_list are active so far
+            
+            if ip not in user_list:  # If user starts a new session, initialize all related record of this session
+                user_list.append(ip)
+                request_dict[ip] = {'startTime':timestamp, 'lastTime':timestamp, 'pageCount':1}
+                user_updated_list.append(ip)
+
+            else:                    # If user is active, update all related record of current session
+                request_dict[ip]['lastTime'] = timestamp
+                request_dict[ip]['pageCount'] += 1
+                user_updated_list.remove(ip)  # Change user's order in user_updated_list by remove and append
+                user_updated_list.append(ip)
+            
 
 
             
