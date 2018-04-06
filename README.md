@@ -8,7 +8,7 @@ Coding challenge of Insight Data Engineering selection.
     * ***request_dict*** - dictionary/map, formatted as {ip:{firstTime:timestamp1, lastTime:timestamp2, pageCount:num}}
     * ***currentTime*** - string, timestamp of current log be processed
 
-2. Go over every log and check the timestamp at first. If hitting a new timestamp, check ***user_update_list*** and see whether there is any session is expired according to time difference between current time and the last time that user requested document.
+2. Go over every log and check the timestamp at first. If hitting a new timestamp, check ***user_update_list*** and see whether there is any session is expired according to time difference between ***currentTime*** and the last time that user requested document.
     * Check from the start of ***user_update_list***. The first user will be the person whose last request is from the longest time ago
     * Once the first user's last request time is within active period, then stop checking since all the rest users must also be active.
     * Remove all relevant record if a session is expired.
