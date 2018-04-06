@@ -1,4 +1,4 @@
-# InsightDataChallenge
+# Insight Data Challenge
 Coding challenge of Insight Data Engineering selection.
 
 # Idea Explanation
